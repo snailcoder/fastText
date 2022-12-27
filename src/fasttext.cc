@@ -236,6 +236,20 @@ void FastText::buildModel() {
   model_ = std::make_shared<Model>(input_, output_, loss, normalizeGradient);
 }
 
+std::vector<real> FastText::getSoftLabels() const {
+  std::vector<real> soft;
+  if (args_->model == model_name::sup) {
+    int32_t n = dict_->nlabels();
+    soft.reserve(n);
+    for (int32_t i = 0; i < n; ++i) {
+      std::string w = dict_->getLabel(i);
+      std::string suffix = w.substr(w.rfind("__") + 2);
+      soft.push_back(std::stof(suffix));
+    }
+  }
+  return soft;
+}
+
 void FastText::loadModel(std::istream& in) {
   args_ = std::make_shared<Args>();
   input_ = std::make_shared<DenseMatrix>();

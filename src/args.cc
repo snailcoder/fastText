@@ -63,6 +63,8 @@ std::string Args::lossToString(loss_name ln) const {
       return "softmax";
     case loss_name::ova:
       return "one-vs-all";
+    case loss_name::softlabel:
+      return "softlabel";
   }
   return "Unknown loss!"; // should never happen
 }
@@ -162,7 +164,9 @@ void Args::parseArgs(const std::vector<std::string>& args) {
         } else if (
             args.at(ai + 1) == "one-vs-all" || args.at(ai + 1) == "ova") {
           loss = loss_name::ova;
-        } else {
+        } else if (args.at(ai + 1) == "softlabel") {
+          loss = loss_name::softlabel;
+	} else {
           std::cerr << "Unknown loss: " << args.at(ai + 1) << std::endl;
           printHelp();
           exit(EXIT_FAILURE);
@@ -278,7 +282,8 @@ void Args::printTrainingHelp() {
       << "  -ws                 size of the context window [" << ws << "]\n"
       << "  -epoch              number of epochs [" << epoch << "]\n"
       << "  -neg                number of negatives sampled [" << neg << "]\n"
-      << "  -loss               loss function {ns, hs, softmax, one-vs-all} ["
+      << "  -loss               loss function {ns, hs, softmax, one-vs-all, "
+      "softlabel} ["
       << lossToString(loss) << "]\n"
       << "  -thread             number of threads (set to 1 to ensure "
          "reproducible results) ["

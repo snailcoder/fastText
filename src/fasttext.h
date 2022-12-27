@@ -80,6 +80,8 @@ class FastText {
   void buildModel();
   std::tuple<int64_t, double, double> progressInfo(real progress);
 
+  std::vector<real> getSoftLabels() const;
+
  public:
   FastText();
 

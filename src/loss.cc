@@ -343,4 +343,59 @@ real SoftmaxLoss::forward(
   return -log(state.output[target]);
 };
 
+SoftLabelLoss::SoftLabelLoss(std::shared_ptr<Matrix>& wo,
+                             const std::vector<real>& softlabels)
+  : Loss(wo), softlabels_(softlabels) {
+}
+
+void SoftLabelLoss::computeOutput(Model::State& state) const {
+  Vector& output = state.output;
+  output.mul(*wo_, state.hidden);
+  real max = output[0], z = 0.0;
+  int32_t osz = output.size();
+  for (int32_t i = 0; i < osz; i++) {
+    max = std::max(output[i], max);
+  }
+  for (int32_t i = 0; i < osz; i++) {
+    output[i] = exp(output[i] - max);
+    z += output[i];
+  }
+  for (int32_t i = 0; i < osz; i++) {
+    output[i] /= z;
+  }
+}
+
+real SoftLabelLoss::getSoftLabel(int32_t lid) const {
+  if (lid < 0 || lid >= softlabels_.size()) {
+    throw std::invalid_argument(
+        "Label id is out of range [0, "
+	+ std::to_string(softlabels_.size()) + ")");
+  }
+  return softlabels_[lid];
+}
+
+real SoftLabelLoss::forward(
+    const std::vector<int32_t>& targets,
+    int32_t targetIndex,
+    Model::State& state,
+    real lr,
+    bool backprop) {
+  computeOutput(state);
+
+  assert(targetIndex >= 0);
+  assert(targetIndex < targets.size());
+  int32_t target = targets[targetIndex];
+
+  if (backprop) {
+    int32_t osz = wo_->size(0);
+    for (int32_t i = 0; i < osz; i++) {
+      real label = (i == target) ? getSoftLabel(i) : 0.0;
+      real alpha = lr * (label - state.output[i]);
+      state.grad.addRow(*wo_, i, alpha);
+      wo_->addVectorToRow(state.hidden, i, alpha);
+    }
+  }
+  return -log(state.output[target]);
+};
+
 } // namespace fasttext

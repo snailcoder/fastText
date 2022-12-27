@@ -160,4 +160,22 @@ class SoftmaxLoss : public Loss {
   void computeOutput(Model::State& state) const override;
 };
 
+class SoftLabelLoss : public Loss {
+ public:
+  explicit SoftLabelLoss(std::shared_ptr<Matrix>& wo,
+		         const std::vector<real>& softlabels);
+  ~SoftLabelLoss() noexcept override = default;
+  real forward(
+      const std::vector<int32_t>& targets,
+      int32_t targetIndex,
+      Model::State& state,
+      real lr,
+      bool backprop) override;
+  void computeOutput(Model::State& state) const override;
+
+ protected:
+  real getSoftLabel(int32_t lid) const;
+  std::vector<real> softlabels_;
+};
+
 } // namespace fasttext
