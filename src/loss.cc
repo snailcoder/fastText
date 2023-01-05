@@ -389,8 +389,8 @@ real SoftLabelLoss::forward(
   if (backprop) {
     int32_t osz = wo_->size(0);
     for (int32_t i = 0; i < osz; i++) {
-      real label = (i == target) ? getSoftLabel(i) : 0.0;
-      real alpha = lr * (label - state.output[i]);
+      real label = (i == target) ? 1.0 : 0.0;
+      real alpha = lr * (label - state.output[i]) * getSoftLabel(i);
       state.grad.addRow(*wo_, i, alpha);
       wo_->addVectorToRow(state.hidden, i, alpha);
     }
